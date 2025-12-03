@@ -8,12 +8,14 @@ var updatingFromOSC = false; // Flag to prevent feedback loop
 var en_BridgeRxPort = 40015; // Default port for En-Bridge RX
 var en_BridgeIP = "127.0.0.1"; // Default IP for En-Bridge
 
+var numberOfObjects = 64; // Number of sound objects to manage
+
 function init() {
   script.log("Custom module init");
 
   // Create a container to hold X and Y values for each of the 128 objects
   SOXYContainer = local.values.addContainer("XY", "X and Y values for each of the 128 objects");
-  for (var i = 1; i <= 16; i++) {
+  for (var i = 1; i <= numberOfObjects; i++) {
 		xy[i]= SOXYContainer.addPoint2DParameter(i, "XY");
 		// xy[i].setAttribute("readonly", true);
     	};
@@ -21,20 +23,20 @@ function init() {
 
   // Create a container to hold Spread values for each of the 128 objects
   SOSpreadContainer = local.values.addContainer("Spread", "Spread values for each of the 128 objects");
-  for (var i = 1; i <= 16; i++) {
+  for (var i = 1; i <= numberOfObjects; i++) {
     spread[i] = SOSpreadContainer.addFloatParameter(i, "Spread", 0, 0, 1);
     SOSpreadContainer.setCollapsed(true);
   }
 
   // Create a container to hold Reverb values for each of the 128 objects
   SOReverbContainer = local.values.addContainer("Reverb", "Reverb send levels for each of the 128 objects");
-  for (var i = 1; i <= 16; i++) {
+  for (var i = 1; i <= numberOfObjects; i++) {
     reverb[i] = SOReverbContainer.addFloatParameter(i, "Reverb", 0, -120, 24);
     SOReverbContainer.setCollapsed(true);
   }
 
   SODelayModeContainer = local.values.addContainer("Delay Mode", "0-1-2");
-  for (var i = 1; i <= 16; i++) {
+  for (var i = 1; i <= numberOfObjects; i++) {
     mode[i] = SODelayModeContainer.addIntParameter(i, "Mode", 0, 0, 2);
     SODelayModeContainer.setCollapsed(true);
   }
@@ -64,7 +66,7 @@ function moduleValueChanged(value) {
   
   // Check which container the value belongs to and send appropriate OSC
   // Check if it's a reverb parameter
-  for (var i = 1; i <= 16; i++) {
+  for (var i = 1; i <= numberOfObjects; i++) {
     if (value == reverb[i]) {
       script.log("Reverb " + i + " changed to: " + value.get());
       local.send("/dbaudio1/matrixinput/reverbsendgain/" + i, value.get());
@@ -73,7 +75,7 @@ function moduleValueChanged(value) {
   }
   
   // Check if it's a spread parameter
-  for (var i = 1; i <= 16; i++) {
+  for (var i = 1; i <= numberOfObjects; i++) {
     if (value == spread[i]) {
       script.log("Spread " + i + " changed to: " + value.get());
       local.send("/dbaudio1/positioning/source_spread/" + i, value.get());
@@ -82,7 +84,7 @@ function moduleValueChanged(value) {
   }
   
   // Check if it's a delay mode parameter
-  for (var i = 1; i <= 16; i++) {
+  for (var i = 1; i <= numberOfObjects; i++) {
     if (value == mode[i]) {
       script.log("Mode " + i + " changed to: " + value.get());
       local.send("/dbaudio1/positioning/source_delaymode/" + i, value.get());
@@ -91,7 +93,7 @@ function moduleValueChanged(value) {
   }
   
   // Check if it's an XY position parameter
-  for (var i = 1; i <= 16; i++) {
+  for (var i = 1; i <= numberOfObjects; i++) {
     if (value == xy[i]) {
       var pos = value.get();
       script.log("XY " + i + " changed to: [" + pos[0] + ", " + pos[1] + "]");
