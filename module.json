@@ -64,46 +64,6 @@
           "default":0
         }
       }
-    },
-    "reverbSendGain":
-		{
-			"menu":"Sound Objects",
-			"callback":"reverbSendGain",
-			"parameters":
-			{
-				"Sound Object #":
-				{
-					"type":"Integer",
-					"min":1,
-					"max":64
-				},
-				"Send gain dB":
-				{
-					"type":"Float",
-					"min":-120,
-					"max":24
-				}
-			}
-		},
-    "piemel":
-		{
-			"menu":"Sound Objects",
-			"callback":"reverbSendGain2",
-			"parameters":
-			{
-				"Sound Object #":
-				{
-					"type":"Integer",
-					"min":1,
-					"max":64
-				},
-				"Send gain dB":
-				{
-					"type":"Float",
-					"min":-120,
-					"max":24
-				}
-			}
-		}
+    }
   }
 }

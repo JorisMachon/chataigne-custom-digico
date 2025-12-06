@@ -177,13 +177,3 @@ function moduleValueChanged(value) {
     
     updatingFromOSC = false; // Clear flag after all updates
 }
-/**
- * Set the EnSpace reverb level send for a specific object
- * @param {integer} object 
- * @param {float} gain (from -120 to +24 in dB)
- */
-function reverbSendGain(object, gain)
-{
-  // script.log("Setting reverb send gain for object " + object + " to " + gain + " dB");
-	local.send("/dbaudio1/matrixinput/reverbsendgain/" + object, gain);
-}
