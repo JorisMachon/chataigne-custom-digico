@@ -3,6 +3,7 @@ var xy = [];
 var spread = [];
 var reverb = [];
 var mode = [];
+var DiGiCoFaderLevels = [];
 var updatingFromOSC = false; // Flag to prevent feedback loop
 
 var en_BridgeRxPort = 40015; // Default port for En-Bridge RX
@@ -11,9 +12,7 @@ var en_BridgeIP = "127.0.0.1"; // Default IP for En-Bridge
 var numberOfObjects = 64; // Number of sound objects to manage
 
 function init() {
-  script.log("Custom module init");
-
-  // Create a container to hold X and Y values for each of the 128 objects
+  // Create containers for SoundScape object parameters
   SOXYContainer = local.values.addContainer("XY", "X and Y values for each of the 128 objects");
   for (var i = 1; i <= numberOfObjects; i++) {
 		xy[i]= SOXYContainer.addPoint2DParameter(i, "XY");
@@ -21,31 +20,36 @@ function init() {
     	};
   SOXYContainer.setCollapsed(true);
 
-  // Create a container to hold Spread values for each of the 128 objects
   SOSpreadContainer = local.values.addContainer("Spread", "Spread values for each of the 128 objects");
   for (var i = 1; i <= numberOfObjects; i++) {
     spread[i] = SOSpreadContainer.addFloatParameter(i, "Spread", 0, 0, 1);
-    SOSpreadContainer.setCollapsed(true);
   }
+    SOSpreadContainer.setCollapsed(true);
 
-  // Create a container to hold Reverb values for each of the 128 objects
   SOReverbContainer = local.values.addContainer("Reverb", "Reverb send levels for each of the 128 objects");
   for (var i = 1; i <= numberOfObjects; i++) {
     reverb[i] = SOReverbContainer.addFloatParameter(i, "Reverb", 0, -120, 24);
-    SOReverbContainer.setCollapsed(true);
   }
+    SOReverbContainer.setCollapsed(true);
 
   SODelayModeContainer = local.values.addContainer("Delay Mode", "0-1-2");
   for (var i = 1; i <= numberOfObjects; i++) {
     mode[i] = SODelayModeContainer.addIntParameter(i, "Mode", 0, 0, 2);
-    SODelayModeContainer.setCollapsed(true);
   }
+    SODelayModeContainer.setCollapsed(true);
+
+  // Create a container to hold DiGiCo Fader Levels
+  DiGiCoFaderContainer = local.values.addContainer("DiGiCo Faders", "DiGiCo Faders values");
+  for(var i = 1; i<= 12; i++){
+    DiGiCoFaderLevels[i] =DiGiCoFaderContainer.addFloatParameter("Fader " + i, "Fader " + i, 0.0, 0.0, 1.0);
+  }
+  DiGiCoFaderContainer.setCollapsed(true);
 
 }
 
 
 function moduleParameterChanged(param) {
-  script.log(param.name + " parameter changed, new value: " + param.get());
+  // script.log(param.name + " parameter changed, new value: " + param.get());
 
   if(param.is(local.parameters.en_BridgeRxPort)){
     script.log("Updating En-Bridge RX port to: " + param.get());
@@ -102,22 +106,25 @@ function moduleValueChanged(value) {
     }
   }
 }
-
-// This is the callback function for the "Custom command" command
-function customCmd(val) {
-  script.log("Custom command called with value " + val);
-  local.parameters.moduleParam.set(val);
-}
-
-
-
+// OSC Event handler
    function oscEvent(address, args) {
     updatingFromOSC = true; // Set flag to prevent feedback
+
+    if (local.match(address, "/sd/Input_Channels/*/fader")) {
+      var parts = address.split("/");
+      var index = parseInt(parts[parts.length - 2], 10);
+      // script.log("Fader " + index + " level: " + args[0]);
+      if (DiGiCoFaderLevels[index]) {
+        DiGiCoFaderLevels[index].set(args[0]);
+      } else {
+        script.logWarning("Received fader for unknown index: " + index);
+      }
+    }
     
-    if (local.match(address, "/dbaudio1/matrixinput/reverbsendgain/*")) {
+    else if (local.match(address, "/dbaudio1/matrixinput/reverbsendgain/*")) {
       var parts = address.split("/");
       var index = parseInt(parts[parts.length - 1]);
-      script.log("Reverb for object "+index+": "+args[0]);
+      // script.log("Reverb for object "+index+": "+args[0]);
       reverb[index].set(args[0]);
     }
 
@@ -125,7 +132,7 @@ function customCmd(val) {
       var parts = address.split("/");
       var index = parseInt(parts[parts.length - 1]);
       local.sendTo(en_BridgeIP, en_BridgeRxPort, "/dbaudio1/positioning/source_spread/" + index, args[0]);
-      script.log("Spread for object "+index+": "+args[0]);
+      // script.log("Spread for object "+index+": "+args[0]);
       spread[index].set(args[0]);
     }
 
@@ -133,7 +140,7 @@ function customCmd(val) {
       var parts = address.split("/");
       var index = parseInt(parts[parts.length - 1]);
       local.sendTo(en_BridgeIP, en_BridgeRxPort, "/dbaudio1/positioning/source_delaymode/" + index, args[0]);
-      script.log("Delay mode for "+index+": "+args[0]);
+      // script.log("Delay mode for "+index+": "+args[0]);
       mode[index].set(args[0]);
     }
 
@@ -141,7 +148,7 @@ function customCmd(val) {
       var parts = address.split("/");
       var index = parseInt(parts[parts.length - 1]);
       local.sendTo(en_BridgeIP, en_BridgeRxPort, "/dbaudio1/coordinatemapping/source_position_x/1/" + index, args[0]);
-      script.log("X position for object "+index+": "+args[0]);
+      // script.log("X position for object "+index+": "+args[0]);
       var currentY = xy[index].get()[1]; // Get current Y value
       xy[index].set(args[0], currentY);
     }
@@ -150,7 +157,7 @@ function customCmd(val) {
       var parts = address.split("/");
       var index = parseInt(parts[parts.length - 1]);
       local.sendTo(en_BridgeIP, en_BridgeRxPort, "/dbaudio1/coordinatemapping/source_position_y/1/" + index, args[0]);
-      script.log("Y position for object "+index+": "+args[0]);
+      // script.log("Y position for object "+index+": "+args[0]);
       var currentX = xy[index].get()[0]; // Get current X value
       xy[index].set(currentX, args[0]);
     }
@@ -159,7 +166,7 @@ function customCmd(val) {
       var parts = address.split("/");
       var index = parseInt(parts[parts.length - 1]);
       local.sendTo(en_BridgeIP, en_BridgeRxPort, "/dbaudio1/coordinatemapping/source_position_xy/1/" + index, args[0], args[1]);
-      script.log("X position for object "+index+": "+args[0] + ", Y position: " + args[1]);
+      // script.log("X position for object "+index+": "+args[0] + ", Y position: " + args[1]);
       xy[index].set(args[0], args[1]);
     }
 
@@ -177,6 +184,6 @@ function customCmd(val) {
  */
 function reverbSendGain(object, gain)
 {
-  script.log("Setting reverb send gain for object " + object + " to " + gain + " dB");
+  // script.log("Setting reverb send gain for object " + object + " to " + gain + " dB");
 	local.send("/dbaudio1/matrixinput/reverbsendgain/" + object, gain);
 }
