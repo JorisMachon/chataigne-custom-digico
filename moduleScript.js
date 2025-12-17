@@ -41,7 +41,7 @@ function init() {
   // Create a container to hold DiGiCo Fader Levels
   DiGiCoFaderContainer = local.values.addContainer("DiGiCo Faders", "DiGiCo Faders values");
   for(var i = 1; i<= 12; i++){
-    DiGiCoFaderLevels[i] =DiGiCoFaderContainer.addFloatParameter("Fader " + i, "Fader " + i, 0.0, 0.0, 1.0);
+    DiGiCoFaderLevels[i] =DiGiCoFaderContainer.addFloatParameter("Fader " + (i+80), "Fader " + (i+80), 0.0, -100.0, 10.0);
   }
   DiGiCoFaderContainer.setCollapsed(true);
 
@@ -112,7 +112,7 @@ function moduleValueChanged(value) {
 
     if (local.match(address, "/sd/Input_Channels/*/fader")) {
       var parts = address.split("/");
-      var index = parseInt(parts[parts.length - 2], 10);
+      var index = parseInt(parts[parts.length - 2], 10)-80;
       // script.log("Fader " + index + " level: " + args[0]);
       if (DiGiCoFaderLevels[index]) {
         DiGiCoFaderLevels[index].set(args[0]);
